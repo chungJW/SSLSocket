@@ -16,18 +16,17 @@ import java.security.cert.X509Certificate;
 public class SSLSocketServer {
 
 
-    public static void main(String[] args) throws Exception {
-        sslSocketServer();
-    }
+    private String keyName = "cmkey";
+    private char[] keyStorePwd = "ar#sp8_".toCharArray();
+    private char[] keyPwd = "ar#sp8_".toCharArray();
+    private int server_port = 10010;
+    private int MAX_BUF_SIZE = 1024;
 
     // 启动一个ssl server socket
     // 配置了证书, 所以不会抛出异常
-    public static void sslSocketServer() throws Exception {
+    public void sslSocketServer() throws Exception {
 
         // key store相关信息
-        String keyName = "cmkey";
-        char[] keyStorePwd = "ar#sp8_".toCharArray();
-        char[] keyPwd = "ar#sp8_".toCharArray();
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 
         // 装载当前目录下的key store. 可用jdk中的keytool工具生成keystore
@@ -50,8 +49,8 @@ public class SSLSocketServer {
         // 监听和接收客户端连接
         SSLServerSocketFactory factory = context.getServerSocketFactory();
         SSLServerSocket server = (SSLServerSocket) factory
-                .createServerSocket(10010);
-        System.out.println("ok");
+                .createServerSocket(server_port);
+        System.out.println("I am ready for client's connection");
 
         while (true) {
             Socket client = server.accept();
@@ -68,10 +67,9 @@ public class SSLSocketServer {
             }).start();
         }
 
-//        server.close();
     }
 
-    private static void execute(Socket client) throws Exception {
+    private void execute(Socket client) throws Exception {
         if (client == null || client.isClosed()) {
             return;
         }
@@ -82,7 +80,7 @@ public class SSLSocketServer {
         // Exception in thread "main" javax.net.ssl.SSLException: Unrecognized
         // SSL message, plaintext connection?
         InputStream input = client.getInputStream();
-        byte[] buf = new byte[1024];
+        byte[] buf = new byte[MAX_BUF_SIZE];
         int len = input.read(buf);
         String message = new String(buf, 0, len);
         System.out.println("received: " + message);
@@ -95,7 +93,7 @@ public class SSLSocketServer {
         }
     }
 
-    public static class MyX509TrustManager implements X509TrustManager {
+    public class MyX509TrustManager implements X509TrustManager {
         @Override
         public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
 
@@ -110,6 +108,11 @@ public class SSLSocketServer {
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        SSLSocketServer server = new SSLSocketServer();
+        server.sslSocketServer();
     }
 }
 
