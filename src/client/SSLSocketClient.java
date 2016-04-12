@@ -24,6 +24,7 @@ public class SSLSocketClient {
 
     private static OutputStream output = null;
     private static InputStream input = null;
+    private static SSLSocket socket = null;
 
     public static void sslSocket2() throws Exception {
         SSLContext context = SSLContext.getInstance("SSL");
@@ -33,11 +34,11 @@ public class SSLSocketClient {
                 new TrustManager[]{new MyX509TrustManager()},
                 new SecureRandom());
         SSLSocketFactory factory = context.getSocketFactory();
-        SSLSocket s = (SSLSocket) factory.createSocket("localhost", 10010);
+        socket = (SSLSocket) factory.createSocket("localhost", 10010);
         System.out.println("连接服务器成功");
 
-        output = s.getOutputStream();
-        input = s.getInputStream();
+        output = socket.getOutputStream();
+        input = socket.getInputStream();
 
         output.write("test".getBytes());
         System.out.println("sent: test");
@@ -60,9 +61,15 @@ public class SSLSocketClient {
                         output.flush();
                         byte[] buf = new byte[1024];
                         int len = input.read(buf);
-                        System.out.println("received:" + new String(buf, 0, len));
+                        String rev_message = new String(buf, 0, len);
+                        System.out.println("received:" + rev_message);
+                        if(rev_message.equals("exit")){
+                            output.close();
+                            output = null;
+                            socket.close();
+                        }
                     } else {
-                        System.out.println("connection failure");
+                        System.out.println("connection lost");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

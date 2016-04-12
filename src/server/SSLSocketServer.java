@@ -69,9 +69,12 @@ public class SSLSocketServer {
         }
 
 //        server.close();
-        }
+    }
 
     private static void execute(Socket client) throws Exception {
+        if (client == null || client.isClosed()) {
+            return;
+        }
         // 向客户端发送接收到的字节序列
         OutputStream output = client.getOutputStream();
 
@@ -83,14 +86,13 @@ public class SSLSocketServer {
         int len = input.read(buf);
         String message = new String(buf, 0, len);
         System.out.println("received: " + message);
-//        if (message.equals("exit")) {
-//            output.close();
-//            input.close();
-//            client.close();
-//        } else {
-            output.write(buf, 0, len);
-            output.flush();
-//        }
+        output.write(buf, 0, len);
+        output.flush();
+        if (message.equals("exit")) {
+            output.close();
+            input.close();
+            client.close();
+        }
     }
 
     public static class MyX509TrustManager implements X509TrustManager {
